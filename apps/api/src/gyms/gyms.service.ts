@@ -20,7 +20,7 @@ export class GymsService {
 
   async list(query: { city?: string; district?: string; q?: string; page?: number; pageSize?: number }) {
     const page = Math.max(1, query.page ?? 1)
-    const pageSize = Math.min(50, Math.max(1, query.pageSize ?? 20))
+    const pageSize = Math.min(100, Math.max(1, query.pageSize ?? 20))
     const where: Prisma.GymWhereInput = { status: 'APPROVED' }
     if (query.city) where.city = query.city
     if (query.district) where.district = query.district

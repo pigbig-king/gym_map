@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router'
 import { Button } from '@/components/ui/button'
 import GymMap from '@/components/LazyGymMap'
@@ -135,10 +135,28 @@ export default function GymDetailPage() {
     },
   })
 
-  if (query.isLoading) return <p className="p-8 text-center text-muted-foreground">加载中…</p>
-  if (query.isError || !query.data) return <p className="p-8 text-center text-destructive">健身房不存在</p>
-
   const gym = query.data
+  const mapGyms = useMemo(
+    () =>
+      gym
+        ? [
+            {
+              id: gym.id,
+              name: gym.name,
+              lat: gym.lat,
+              lng: gym.lng,
+              district: gym.district,
+              price: gym.price,
+              environment: gym.environment,
+              equipment: gym.equipment,
+            },
+          ]
+        : [],
+    [gym],
+  )
+
+  if (query.isLoading) return <p className="p-8 text-center text-muted-foreground">加载中…</p>
+  if (query.isError || !gym) return <p className="p-8 text-center text-destructive">健身房不存在</p>
 
   return (
     <main className="mx-auto max-w-4xl p-4">
@@ -152,7 +170,7 @@ export default function GymDetailPage() {
       </div>
 
       <div className="mb-4 h-56 overflow-hidden rounded-lg border">
-        <GymMap gyms={[{ id: gym.id, name: gym.name, lat: gym.lat, lng: gym.lng, district: gym.district, price: gym.price, environment: gym.environment, equipment: gym.equipment }]} />
+        <GymMap gyms={mapGyms} />
       </div>
 
       <section id="price" className="mb-4">
