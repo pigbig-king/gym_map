@@ -1,0 +1,30 @@
+# dependencies
+node_modules
+
+# build output
+dist
+dist-ssr
+*.tsbuildinfo
+
+# environment
+.env
+.env.*
+!.env.example
+
+# runtime data (uploads)
+apps/api/uploads/*
+!apps/api/uploads/.gitkeep
+data/
+
+# logs
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# editor / OS
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.sw?

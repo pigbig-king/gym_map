@@ -1,0 +1,128 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.21 0.02 275);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.21 0.02 275);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.21 0.02 275);
+  --primary: oklch(0.511 0.262 276.966);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.962 0.018 272);
+  --secondary-foreground: oklch(0.373 0.194 265);
+  --muted: oklch(0.962 0.018 272);
+  --muted-foreground: oklch(0.554 0.046 270);
+  --accent: oklch(0.962 0.018 272);
+  --accent-foreground: oklch(0.373 0.194 265);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.928 0.008 275);
+  --input: oklch(0.928 0.008 275);
+  --ring: oklch(0.511 0.262 276.966);
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+}
+
+/* 品牌渐变文字 */
+.text-gradient {
+  background: linear-gradient(135deg, oklch(0.541 0.281 293), oklch(0.511 0.262 277) 55%, oklch(0.62 0.19 190));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* 玻璃拟态面板 */
+.glass {
+  background: color-mix(in oklab, var(--card) 78%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+/* 地图健身房标记 */
+.gym-marker {
+  position: relative;
+  line-height: 0;
+  cursor: pointer;
+  filter: drop-shadow(0 2px 4px rgb(0 0 0 / 0.25));
+}
+.gym-marker-label {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 1px;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-radius: 999px;
+  background: #2563eb;
+  color: #fff;
+  padding: 2px 7px;
+  font-size: 12px;
+  line-height: 1.4;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.2);
+}
+
+/* 地图健身房气泡 */
+.gym-popup .maplibre-gl-popup-content {
+  padding: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 12px 32px -12px rgba(0, 0, 0, 0.35);
+}
+.gym-popup .maplibre-gl-popup-close-button {
+  color: #fff;
+  top: 8px;
+  right: 8px;
+  width: 22px;
+  height: 22px;
+  font-size: 16px;
+  line-height: 1;
+  border-radius: 6px;
+}
+.gym-popup .maplibre-gl-popup-close-button:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+.gym-popup .popup-row:hover {
+  background: #ede8ff !important;
+  border-color: #d6cfff !important;
+}
