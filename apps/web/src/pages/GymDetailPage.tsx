@@ -40,7 +40,8 @@ const STATUS_LABEL: Record<string, { text: string; cls: string }> = {
 
 export default function GymDetailPage() {
   const { id } = useParams<{ id: string }>()
-  const { token } = useAuth()
+  const { token, user } = useAuth()
+  const canManageEquipment = user?.role === 'ADMIN'
   const queryClient = useQueryClient()
   const location = useLocation()
   const [rating, setRating] = useState(5)
@@ -63,7 +64,7 @@ export default function GymDetailPage() {
   }
 
   const query = useQuery({
-    queryKey: ['gym', id],
+    queryKey: ['gym', id, token],
     queryFn: () => apiFetch<GymDetail>(`/gyms/${id}`, { token }),
     enabled: Boolean(id),
   })
@@ -74,7 +75,8 @@ export default function GymDetailPage() {
   }, [location.hash, query.isSuccess])
 
   const checkInMutation = useMutation({
-    mutationFn: () => apiFetch(`/gyms/${id}/check-in`, { method: 'POST', token }),
+    mutationFn: () => apiFetch(`/gyms/${id}/check-in`, { method: query.data?.myCheckIn ? 'DELETE' : 'POST', token }),
+    onError: (error) => notify(error.message),
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['gym', id] }),
   })
   const reviewMutation = useMutation({
@@ -96,6 +98,7 @@ export default function GymDetailPage() {
     },
   })
   const addEquipmentMutation = useMutation({
+    onError: (error) => notify(error.message),
     mutationFn: () =>
       apiFetch(`/gyms/${id}/equipment`, {
         method: 'POST',
@@ -120,6 +123,7 @@ export default function GymDetailPage() {
     },
   })
   const updateEquipmentMutation = useMutation({
+    onError: (error) => notify(error.message),
     mutationFn: (args: { equipmentId: string; status: string }) =>
       apiFetch(`/gyms/${id}/equipment/${args.equipmentId}`, { method: 'PATCH', token, body: { status: args.status } }),
     onSuccess: () => {
@@ -128,6 +132,7 @@ export default function GymDetailPage() {
     },
   })
   const removeEquipmentMutation = useMutation({
+    onError: (error) => notify(error.message),
     mutationFn: (equipmentId: string) => apiFetch(`/gyms/${id}/equipment/${equipmentId}`, { method: 'DELETE', token }),
     onSuccess: () => {
       notify('已删除器械')
@@ -186,14 +191,14 @@ export default function GymDetailPage() {
       <section id="equipment" className="mb-6">
         <div className="mb-2 flex items-center justify-between">
           <h2 className="font-medium">器械清单</h2>
-          {token && (
+          {canManageEquipment && (
             <Button size="sm" variant="outline" onClick={() => setShowAddForm((v) => !v)}>
               {showAddForm ? '收起' : '+ 新增器械'}
             </Button>
           )}
         </div>
 
-        {showAddForm && token && (
+        {showAddForm && canManageEquipment && (
           <div className="mb-3 rounded-lg border p-3">
             <div className="flex flex-wrap gap-2">
               <input value={eqName} onChange={(e) => setEqName(e.target.value)} placeholder="器械名称，如 深蹲架" className="h-9 min-w-32 flex-1 rounded-md border border-input bg-transparent px-2 text-sm" />
@@ -225,7 +230,7 @@ export default function GymDetailPage() {
                     {e.professionalName && <span className="text-xs text-muted-foreground">（{e.professionalName}）</span>}
                     {e.serialLabel && <span className="text-xs text-muted-foreground">标签：{e.serialLabel}</span>}
                     <span className="text-sm">× {e.quantity}</span>
-                    {token ? (
+                    {canManageEquipment ? (
                       <select value={e.status} onChange={(ev) => updateEquipmentMutation.mutate({ equipmentId: e.id, status: ev.target.value })} className="h-7 rounded-md border border-input bg-transparent px-1 text-xs">
                         <option value="NORMAL">正常</option>
                         <option value="DAMAGED">损坏</option>
@@ -237,7 +242,7 @@ export default function GymDetailPage() {
                     <button type="button" className="ml-auto text-xs text-primary hover:underline" onClick={() => setReviewFor(reviewFor === e.id ? null : e.id)}>
                       {e.reviews.length > 0 ? `评价(${e.reviews.length})` : '评价'}
                     </button>
-                    {token && (
+                    {canManageEquipment && (
                       confirmId === e.id ? (
                         <button type="button" className="text-xs font-medium text-destructive hover:underline" onClick={() => { removeEquipmentMutation.mutate(e.id); setConfirmId(null) }}>
                           确认删除？
@@ -289,7 +294,7 @@ export default function GymDetailPage() {
       )}
 
       <div className="mb-6 flex flex-wrap items-center gap-3">
-        <Button variant={gym.myCheckIn ? 'secondary' : 'default'} onClick={() => (token ? checkInMutation.mutate() : undefined)} disabled={!token}>
+        <Button variant={gym.myCheckIn ? 'secondary' : 'default'} onClick={() => (token ? checkInMutation.mutate() : undefined)} disabled={!token || checkInMutation.isPending}>
           {gym.myCheckIn ? '已打卡（点击取消）' : '打卡'}
         </Button>
         {gym.avgRating != null && <span className="text-sm text-muted-foreground">评分 {gym.avgRating}（{gym._count.reviews} 条）· 打卡 {gym._count.checkIns}</span>}

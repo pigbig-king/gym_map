@@ -26,6 +26,7 @@ export async function apiFetch<T>(path: string, options: ApiOptions = {}): Promi
   if (options.token) headers.Authorization = `Bearer ${options.token}`
 
   const res = await fetch(`${API_BASE}${path}`, {
+    cache: 'no-store',
     method: options.method ?? 'GET',
     headers,
     body: options.body !== undefined ? JSON.stringify(options.body) : undefined,

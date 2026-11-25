@@ -1,14 +1,15 @@
 import { Type } from 'class-transformer'
-import { IsArray, IsIn, IsOptional, ValidateNested } from 'class-validator'
+import { ArrayMaxSize, IsArray, IsIn, ValidateIf, ValidateNested } from 'class-validator'
 import { GymEquipmentDto } from './create-gym.dto'
 
 export class UpdateGymDto {
-  @IsOptional()
+  @ValidateIf((_object, value) => value !== undefined)
   @IsIn(['PENDING', 'APPROVED', 'REJECTED'])
   status?: 'PENDING' | 'APPROVED' | 'REJECTED'
 
-  @IsOptional()
+  @ValidateIf((_object, value) => value !== undefined)
   @IsArray()
+  @ArrayMaxSize(100)
   @ValidateNested({ each: true })
   @Type(() => GymEquipmentDto)
   equipment?: GymEquipmentDto[]

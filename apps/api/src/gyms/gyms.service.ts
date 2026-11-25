@@ -117,6 +117,7 @@ export class GymsService {
         lat: dto.lat,
         lng: dto.lng,
         description: dto.description,
+        environment: dto.environment,
         price: dto.price,
         hours: dto.hours,
         phone: dto.phone,
@@ -152,24 +153,20 @@ export class GymsService {
     const gym = await this.prisma.gym.findUnique({ where: { id: gymId } })
     if (!gym || gym.status !== 'APPROVED') throw new NotFoundException('健身房不存在')
     const today = todayISO()
-    const existing = await this.prisma.gymCheckIn.findUnique({
+    await this.prisma.gymCheckIn.upsert({
       where: { gymId_userId_date: { gymId, userId, date: today } },
+      create: { gymId, userId, date: today },
+      update: {},
     })
-    if (existing) {
-      await this.prisma.gymCheckIn.delete({ where: { id: existing.id } })
-    } else {
-      await this.prisma.gymCheckIn.create({ data: { gymId, userId, date: today } })
-    }
     const count = await this.prisma.gymCheckIn.count({ where: { gymId } })
-    return { checkedIn: !existing, count }
+    return { checkedIn: true, count }
   }
 
   async removeCheckIn(userId: string, gymId: string) {
     const today = todayISO()
-    const existing = await this.prisma.gymCheckIn.findUnique({
-      where: { gymId_userId_date: { gymId, userId, date: today } },
+    await this.prisma.gymCheckIn.deleteMany({
+      where: { gymId, userId, date: today },
     })
-    if (existing) await this.prisma.gymCheckIn.delete({ where: { id: existing.id } })
     const count = await this.prisma.gymCheckIn.count({ where: { gymId } })
     return { checkedIn: false, count }
   }
@@ -185,27 +182,32 @@ export class GymsService {
   }
 
   async approve(gymId: string, dto: UpdateGymDto) {
-    const gym = await this.prisma.gym.findUnique({ where: { id: gymId } })
-    if (!gym) throw new NotFoundException('健身房不存在')
-    const data: Prisma.GymUpdateInput = {}
-    if (dto.status !== undefined) data.status = dto.status
-    if (dto.equipment !== undefined) {
-      data.equipment = {
-        deleteMany: {},
-        create: dto.equipment.map((e) => ({ name: e.name, quantity: e.quantity })),
+    return this.prisma.$transaction(async (tx) => {
+      const gym = await tx.gym.findUnique({ where: { id: gymId } })
+      if (!gym) throw new NotFoundException('健身房不存在')
+      const data: Prisma.GymUpdateInput = {}
+      if (dto.status !== undefined) data.status = dto.status
+      if (dto.equipment !== undefined) {
+        if (gym.status !== 'PENDING') throw new BadRequestException('已审核健身房请使用单件器械接口修改，避免丢失器械评价')
+        data.equipment = {
+          deleteMany: {},
+          create: dto.equipment.map((e) => ({ name: e.name, professionalName: e.professionalName, serialLabel: e.serialLabel, quantity: e.quantity, status: e.status ?? 'NORMAL' })),
+        }
       }
-    }
-    const updated = await this.prisma.gym.update({ where: { id: gymId }, data, include: { equipment: true } })
-    if (dto.status === 'APPROVED' || dto.status === 'REJECTED') {
-      const type = dto.status === 'APPROVED' ? 'gym_approved' : 'gym_rejected'
-      await this.notifications.notify(gym.submittedById, type, null, 'gym', gymId)
-    }
-    return updated
+      const updated = await tx.gym.update({ where: { id: gymId }, data, include: { equipment: true } })
+      if (dto.status !== gym.status && (dto.status === 'APPROVED' || dto.status === 'REJECTED')) {
+        const type = dto.status === 'APPROVED' ? 'gym_approved' : 'gym_rejected'
+        await this.notifications.notify(gym.submittedById, type, null, 'gym', gymId, tx)
+      }
+      return updated
+    })
   }
 
   async reviewEquipment(userId: string, gymId: string, equipmentId: string, dto: CreateEquipmentReviewDto) {
-    const equipment = await this.prisma.gymEquipment.findUnique({ where: { id: equipmentId } })
-    if (!equipment || equipment.gymId !== gymId) throw new NotFoundException('器材不存在')
+    const equipment = await this.prisma.gymEquipment.findFirst({
+      where: { id: equipmentId, gymId, gym: { status: 'APPROVED' } },
+    })
+    if (!equipment) throw new NotFoundException('器材不存在')
     return this.prisma.gymEquipmentReview.upsert({
       where: { equipmentId_userId: { equipmentId, userId } },
       update: { rating: dto.rating, comment: dto.comment },

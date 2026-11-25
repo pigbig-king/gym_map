@@ -1,26 +1,29 @@
 import { Module } from '@nestjs/common'
-import { MulterModule } from '@nestjs/platform-express'
+import { ConfigService } from '@nestjs/config'
 import { ServeStaticModule } from '@nestjs/serve-static'
-import { diskStorage } from 'multer'
-import { extname, join } from 'path'
+import { join, resolve } from 'node:path'
 import { UploadsController } from './uploads.controller'
+import { UploadsService } from './uploads.service'
 
 @Module({
   imports: [
-    MulterModule.register({
-      storage: diskStorage({
-        destination: join(process.cwd(), 'uploads'),
-        filename: (_req, file, cb) => {
-          const ext = extname(file.originalname) || '.png'
-          cb(null, `${Date.now()}-${Math.round(Math.random() * 1e9).toString(36)}${ext}`)
+    ServeStaticModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => [{
+        rootPath: resolve(config.get<string>('UPLOAD_DIR') ?? join(process.cwd(), 'uploads')),
+        serveRoot: '/uploads',
+        serveStaticOptions: {
+          index: false,
+          dotfiles: 'deny',
+          setHeaders: (res) => {
+            res.setHeader('X-Content-Type-Options', 'nosniff')
+            res.setHeader('Content-Security-Policy', "default-src 'none'; sandbox")
+          },
         },
-      }),
-    }),
-    ServeStaticModule.forRoot({
-      rootPath: join(process.cwd(), 'uploads'),
-      serveRoot: '/uploads',
+      }],
     }),
   ],
   controllers: [UploadsController],
+  providers: [UploadsService],
 })
 export class UploadsModule {}

@@ -57,6 +57,14 @@ export default function GymNewPage() {
     const file = e.target.files?.[0]
     e.target.value = ''
     if (!file || !token) return
+    if (images.length >= 10) {
+      setError('最多上传 10 张图片')
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError('图片大小不能超过 5MB')
+      return
+    }
     try {
       const url = await uploadImage(file, token)
       setImages((prev) => [...prev, url])
@@ -219,7 +227,8 @@ export default function GymNewPage() {
 
       <div className="mt-4">
         <label className="mb-1 block text-sm">图片（可选，可多张）</label>
-        <input type="file" accept="image/*" onChange={(e) => void handleImage(e)} />
+        <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => void handleImage(e)} />
+        <p className="mt-1 text-xs text-muted-foreground">支持 JPG、PNG、静态 WebP；每张最多 5MB，最多 10 张。</p>
         {images.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-2">
             {images.map((url) => (

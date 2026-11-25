@@ -152,10 +152,10 @@ psql -d gym_map -c "UPDATE \"User\" SET role = 'ADMIN' WHERE email = 'you@exampl
 | POST / DELETE | `/gyms/:id/check-in` | 登录 | 打卡 / 取消今日打卡 |
 | POST | `/gyms/:id/review` | 登录 | 健身房评分（每人一条，upsert） |
 | POST | `/gyms/:gymId/equipment/:equipmentId/review` | 登录 | 器材评价 |
-| POST | `/gyms/:id/equipment` | 登录 | 新增器械 |
-| PATCH / DELETE | `/gyms/:id/equipment/:equipmentId` | 登录 | 修改 / 删除器械 |
+| POST | `/gyms/:id/equipment` | ADMIN | 新增器械 |
+| PATCH / DELETE | `/gyms/:id/equipment/:equipmentId` | ADMIN | 修改 / 删除器械 |
 | PATCH / DELETE | `/gyms/:id` | ADMIN | 审核 / 删除健身房 |
-| POST | `/uploads` | 登录 | 上传图片（≤5MB，返回 `/uploads/<file>`） |
+| POST | `/uploads` | 登录 | 上传 JPG / PNG / 静态 WebP（≤5MB，重新编码为 WebP） |
 | GET | `/geo/search?q=` | 公开 | 城市 / 区县模糊搜索 |
 | GET | `/notifications` | 登录 | 通知列表与未读数 |
 | POST | `/notifications/:id/read` / `/notifications/read-all` | 登录 | 标记已读 |
@@ -187,6 +187,33 @@ cd apps/api && node dist/main
 ```
 
 生产环境建议用 Nginx 托管 `apps/web/dist`（开启 SPA fallback 到 `index.html`），并将 `/api` 与 `/uploads` 反向代理到 API 服务。
+
+### 安全与数据规则
+
+- `JWT_SECRET` 必须为至少 32 位随机密钥，缺失、过短或使用示例值时拒绝启动。可用 `node -e "console.log(require('node:crypto').randomBytes(48).toString('hex'))"` 生成。更换密钥会使已有登录失效。
+- API 默认仅监听 `127.0.0.1`，适用于本机 Nginx 反向代理。容器部署按需显式设置 `HOST`；不要将数据库或 API 调试端口暴露到公网。上线时需在 Nginx / 网关配置 HTTPS。
+- 默认不启用跨域；前端与 API 使用同源代理即可。前后端独立域名部署时，通过 `CORS_ORIGINS` 填写允许的完整 Origin。
+- 登录每 IP 每分钟最多 10 次，注册 5 次，上传 20 次；其他接口每 IP、每路由每分钟最多 120 次。超限返回 `429` 和 `Retry-After`。当前限流使用进程内存，多实例部署需共享限流存储或网关限流。
+- Nginx 与 API 同机且 API 仅绑定回环地址时，可设置 `TRUST_PROXY=loopback`，并在代理中使用 `proxy_set_header X-Forwarded-For $remote_addr;` 覆盖客户端传入值。不要设置无条件信任代理。
+- 器械直接增删改仅管理员可操作，用户投稿的器械随健身房一并审核。已审核门店不能批量替换器械，避免连带删除评价；单件删除仍会删除该器械的评价。
+- 每次鉴权查询账号当前角色，角色撤销或账号删除后旧令牌不能继续取得原权限。注册密码最多 72 个 UTF-8 字节，避免 bcrypt 截断；不同邮箱前缀相同时不再产生昵称冲突。
+- 图片按实际内容解码校验，拒绝 SVG、动画及损坏文件，最多 2000 万像素；压缩为最长边 2048 的 WebP 并移除 EXIF 等元数据。每条投稿最多 10 张本站图片、100 项器械，坐标及分页参数均验证范围。
+- `/uploads` 应代理给 API，以保留其安全响应头；如由 Nginx 直接托管，需另行配置 `X-Content-Type-Options: nosniff` 和 `Content-Security-Policy: default-src 'none'; sandbox`，尤其是历史上传文件。
+- API 响应不缓存，PWA 更新激活时清除旧版 `api-cache`；前端退出或切换账号时清空查询缓存。PWA 仍可缓存应用静态资源，离线时 API 数据不可用。
+- 打卡以 `Asia/Shanghai` 日期计算；`POST /check-in` 幂等打卡，`DELETE /check-in` 幂等取消。审核状态和通知在同一事务中保存，投稿环境字段完整保存。
+
+### 验证与本地端口
+
+```bash
+pnpm --filter api prisma:generate
+pnpm lint
+pnpm test
+pnpm build
+```
+
+测试启动临时 API、替换数据库访问并使用临时上传目录，不连接或修改生产数据库，覆盖鉴权、越权、限流、上传和数据校验。
+
+本地 API 端口可在 `apps/api/.env` 中通过 `PORT` 设置。需要调整 Vite 代理目标时，复制 `apps/web/.env.example` 为 `.env.local` 并修改 `API_PROXY_TARGET`，然后通过 `pnpm dev -- --port 5174` 启动前端。环境文件及 `.local/` 下的本地数据不会提交到 Git。
 
 ## 说明
 

@@ -31,7 +31,7 @@ export default function NotificationsPage() {
   const queryClient = useQueryClient()
 
   const query = useQuery({
-    queryKey: ['notifications'],
+    queryKey: ['notifications', token],
     queryFn: () => apiFetch<NotificationList>('/notifications', { token }),
     enabled: Boolean(token),
   })

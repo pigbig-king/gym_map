@@ -10,6 +10,7 @@ import { CreateReviewDto } from './dto/create-review.dto'
 import { UpdateEquipmentDto } from './dto/update-equipment.dto'
 import { UpdateGymDto } from './dto/update-gym.dto'
 import { GymsService } from './gyms.service'
+import { ListGymsDto } from './dto/list-gyms.dto'
 
 @Controller('gyms')
 export class GymsController {
@@ -17,20 +18,8 @@ export class GymsController {
 
   @Public()
   @Get()
-  list(
-    @Query('city') city?: string,
-    @Query('district') district?: string,
-    @Query('q') q?: string,
-    @Query('page') page?: string,
-    @Query('pageSize') pageSize?: string,
-  ) {
-    return this.gymsService.list({
-      city,
-      district,
-      q,
-      page: page ? parseInt(page, 10) : undefined,
-      pageSize: pageSize ? parseInt(pageSize, 10) : undefined,
-    })
+  list(@Query() query: ListGymsDto) {
+    return this.gymsService.list(query)
   }
 
   @Public()
@@ -93,16 +82,19 @@ export class GymsController {
     return this.gymsService.reviewEquipment(user.id, gymId, equipmentId, dto)
   }
 
+  @Roles('ADMIN')
   @Post(':id/equipment')
   addEquipment(@Param('id') id: string, @Body() dto: CreateEquipmentDto) {
     return this.gymsService.addEquipment(id, dto)
   }
 
+  @Roles('ADMIN')
   @Patch(':id/equipment/:equipmentId')
   updateEquipment(@Param('id') id: string, @Param('equipmentId') equipmentId: string, @Body() dto: UpdateEquipmentDto) {
     return this.gymsService.updateEquipment(id, equipmentId, dto)
   }
 
+  @Roles('ADMIN')
   @Delete(':id/equipment/:equipmentId')
   removeEquipment(@Param('id') id: string, @Param('equipmentId') equipmentId: string) {
     return this.gymsService.removeEquipment(id, equipmentId)

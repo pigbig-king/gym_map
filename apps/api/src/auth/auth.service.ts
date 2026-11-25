@@ -4,6 +4,8 @@ import * as bcrypt from 'bcrypt'
 import { PrismaService } from '../prisma/prisma.service'
 import { LoginDto } from './dto/login.dto'
 import { RegisterDto } from './dto/register.dto'
+import { randomUUID } from 'node:crypto'
+import { Prisma } from '@prisma/client'
 
 @Injectable()
 export class AuthService {
@@ -19,10 +21,15 @@ export class AuthService {
     }
 
     const passwordHash = await bcrypt.hash(dto.password, 10)
-    const nickname = dto.email.split('@')[0]
+    const nickname = `${dto.email.split('@')[0].slice(0, 16)}-${randomUUID().slice(0, 8)}`
 
     const user = await this.prisma.user.create({
       data: { email: dto.email, passwordHash, nickname },
+    }).catch((error: unknown) => {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        throw new ConflictException('该邮箱或昵称已被使用，请重试')
+      }
+      throw error
     })
 
     return { id: user.id, email: user.email, nickname: user.nickname, role: user.role }

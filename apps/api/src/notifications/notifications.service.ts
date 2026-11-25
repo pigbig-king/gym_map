@@ -7,9 +7,9 @@ export type NotificationType = 'gym_approved' | 'gym_rejected'
 export class NotificationsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  notify(userId: string, type: NotificationType, actorId: string | null, targetType: string, targetId: string) {
+  notify(userId: string, type: NotificationType, actorId: string | null, targetType: string, targetId: string, client: Pick<PrismaService, 'notification'> = this.prisma) {
     if (userId === actorId) return Promise.resolve(null)
-    return this.prisma.notification.create({
+    return client.notification.create({
       data: { userId, type, actorId, targetType, targetId },
     })
   }

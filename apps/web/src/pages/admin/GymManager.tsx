@@ -20,7 +20,7 @@ export default function GymManager() {
   const queryClient = useQueryClient()
 
   const pendingQuery = useQuery({
-    queryKey: ['gyms-pending'],
+    queryKey: ['gyms-pending', token],
     queryFn: () => apiFetch<PendingGym[]>('/gyms/pending', { token }),
     enabled: Boolean(token),
   })
