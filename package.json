@@ -2,7 +2,7 @@
   "name": "gym-map",
   "private": true,
   "version": "0.1.0",
-  "packageManager": "pnpm@12.21.0",
+  "packageManager": "pnpm@10.28.2",
   "description": "健身房地图 · 独立应用（NestJS + Prisma + React + MapLibre）",
   "scripts": {
     "test": "pnpm --filter api test",
