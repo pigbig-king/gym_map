@@ -1,0 +1,47 @@
+name: 缺陷报告
+description: 报告可复现的问题
+title: "fix: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        请先搜索现有 Issue。请勿提交密码、访问令牌、真实用户资料或生产数据；安全漏洞请阅读 SECURITY.md 并私下报告。
+  - type: textarea
+    id: expected
+    attributes:
+      label: 预期结果
+      description: 你希望发生什么？
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际结果
+      description: 实际发生了什么？
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      description: 请按顺序列出复现方法。
+      placeholder: |
+        1. 打开……
+        2. 点击……
+        3. 看到……
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: 运行环境
+      description: 浏览器、操作系统或 Node.js 版本。
+    validations:
+      required: false
+  - type: textarea
+    id: evidence
+    attributes:
+      label: 截图或日志
+      description: 请先移除个人信息、令牌和内部地址。
+    validations:
+      required: false

@@ -103,26 +103,37 @@
 }
 
 /* 地图健身房气泡 */
-.gym-popup .maplibre-gl-popup-content {
+.gym-popup .maplibregl-popup-content {
   padding: 0;
-  border-radius: 12px;
+  border-radius: 14px;
   overflow: hidden;
-  box-shadow: 0 12px 32px -12px rgba(0, 0, 0, 0.35);
+  background: #fff;
+  box-shadow: 0 12px 32px -14px rgb(15 23 42 / 0.4), 0 2px 8px rgb(15 23 42 / 0.1);
 }
-.gym-popup .maplibre-gl-popup-close-button {
-  color: #fff;
+.gym-popup .maplibregl-popup-close-button {
+  z-index: 1;
   top: 8px;
   right: 8px;
-  width: 22px;
-  height: 22px;
-  font-size: 16px;
+  display: grid;
+  width: 23px;
+  height: 23px;
+  place-items: center;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.15);
+  color: #fff;
+  font-size: 19px;
   line-height: 1;
-  border-radius: 6px;
 }
-.gym-popup .maplibre-gl-popup-close-button:hover {
-  background: rgba(255, 255, 255, 0.18);
+.gym-popup .maplibregl-popup-close-button:hover {
+  background: rgb(255 255 255 / 0.26);
 }
-.gym-popup .popup-row:hover {
-  background: #ede8ff !important;
-  border-color: #d6cfff !important;
+.gym-popup .maplibregl-popup-tip { border-top-color: #fff; border-bottom-color: #fff; }
+.gym-popup-card { width: min(248px, calc(100vw - 52px)); color: #172033; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif; }
+.gym-popup-header { display: flex; min-height: 70px; flex-direction: column; align-items: center; justify-content: center; padding: 11px 16px; background: #f8fafc; color: #172033; text-align: center; }
+.gym-popup-title { display: block; width: 100%; padding: 0; border: 0; background: transparent; color: inherit; cursor: pointer; font: inherit; font-size: 14px; font-weight: 700; line-height: 1.4; text-align: center; overflow-wrap: anywhere; }
+.gym-popup-location { margin-top: 4px; color: #64748b; font-size: 11px; line-height: 1.4; text-align: center; overflow-wrap: anywhere; }
+.gym-popup-title:hover { color: #4f46e5; }
+.gym-popup-title:focus-visible { border-radius: 3px; outline: 2px solid #818cf8; outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  .gym-popup-title { transition: none; }
 }

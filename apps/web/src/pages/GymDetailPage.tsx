@@ -148,6 +148,7 @@ export default function GymDetailPage() {
             {
               id: gym.id,
               name: gym.name,
+              address: gym.address,
               lat: gym.lat,
               lng: gym.lng,
               district: gym.district,
@@ -160,37 +161,69 @@ export default function GymDetailPage() {
     [gym],
   )
 
+  const equipmentCount = gym?.equipment.reduce((total, item) => total + item.quantity, 0) ?? 0
+
   if (query.isLoading) return <p className="p-8 text-center text-muted-foreground">加载中…</p>
   if (query.isError || !gym) return <p className="p-8 text-center text-destructive">健身房不存在</p>
 
   return (
-    <main className="mx-auto max-w-4xl p-4">
-      <Link to="/" className="mb-3 inline-block text-sm text-muted-foreground hover:text-foreground">
-        ← 返回地图
-      </Link>
-      <h1 className="mb-2 text-2xl font-semibold">{gym.name}</h1>
-      <div className="mb-2 text-sm text-muted-foreground">
-        {gym.city}
-        {gym.district ? ` · ${gym.district}` : ''} · {gym.address}
-      </div>
+    <main className="min-h-[calc(100vh-56px)] bg-slate-50/70 px-3 py-5 sm:px-6 sm:py-8">
+      <div className="mx-auto max-w-6xl">
+        <Link to="/" className="mb-4 inline-flex items-center gap-2 rounded-full border bg-white px-3 py-1.5 text-sm text-muted-foreground shadow-sm transition hover:text-foreground">
+          <span aria-hidden="true">←</span> 返回合肥地图
+        </Link>
 
-      <div className="mb-4 h-56 overflow-hidden rounded-lg border">
-        <GymMap gyms={mapGyms} />
-      </div>
+        <header className="relative overflow-hidden rounded-3xl border bg-white p-5 shadow-sm sm:p-8">
+          <div className="pointer-events-none absolute -right-12 -top-24 h-64 w-64 rounded-full bg-indigo-100/70 blur-3xl" />
+          <div className="relative flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+            <div className="min-w-0">
+              <div className="mb-3 flex flex-wrap items-center gap-2 text-xs font-medium text-indigo-700">
+                <span className="rounded-full bg-indigo-50 px-3 py-1">{gym.city}健身地图</span>
+                {gym.district && <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-600">{gym.district}</span>}
+              </div>
+              <h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">{gym.name}</h1>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500">{gym.address}</p>
+              <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+                <span className="font-semibold text-amber-600">★ {gym.avgRating?.toFixed(1) ?? '新场馆'}</span>
+                <span className="text-slate-500">{gym._count.reviews} 条评价</span>
+                <span className="text-slate-500">{gym._count.checkIns} 次打卡</span>
+              </div>
+            </div>
+            <Button className="h-11 shrink-0 rounded-xl px-5" variant={gym.myCheckIn ? 'secondary' : 'default'} onClick={() => (token ? checkInMutation.mutate() : undefined)} disabled={!token || checkInMutation.isPending}>
+              {gym.myCheckIn ? '今日已打卡' : token ? '记录今日打卡' : '登录后打卡'}
+            </Button>
+          </div>
+        </header>
 
-      <section id="price" className="mb-4">
-        <h2 className="mb-2 font-medium">价格</h2>
-        <p className="text-muted-foreground">{gym.price || '暂无'}</p>
-      </section>
+        <section aria-label="场馆信息摘要" className="my-4 grid grid-cols-2 gap-3 sm:my-5 sm:grid-cols-4">
+          <article className="rounded-2xl border bg-white p-4 shadow-sm sm:p-5"><p className="text-xs font-medium text-slate-500">价格参考</p><p className="mt-2 text-lg font-semibold text-slate-900">{gym.price || '待补充'}</p></article>
+          <article className="rounded-2xl border bg-white p-4 shadow-sm sm:p-5"><p className="text-xs font-medium text-slate-500">营业时间</p><p className="mt-2 truncate text-lg font-semibold text-slate-900">{gym.hours || '待补充'}</p></article>
+          <article className="rounded-2xl border bg-white p-4 shadow-sm sm:p-5"><p className="text-xs font-medium text-slate-500">器械数量</p><p className="mt-2 text-lg font-semibold text-slate-900">{equipmentCount} <span className="text-sm font-normal text-slate-500">件 · {gym.equipment.length} 类</span></p></article>
+          <article className="rounded-2xl border bg-white p-4 shadow-sm sm:p-5"><p className="text-xs font-medium text-slate-500">综合评分</p><p className="mt-2 text-lg font-semibold text-slate-900">{gym.avgRating?.toFixed(1) ?? '暂无'} <span className="text-amber-500">{gym.avgRating != null ? '★' : ''}</span></p></article>
+        </section>
 
-      <section id="environment" className="mb-4">
-        <h2 className="mb-2 font-medium">环境</h2>
-        <p className="text-muted-foreground">{gym.environment || '暂无'}</p>
-      </section>
+        <div className="mb-5 grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
+          <section className="overflow-hidden rounded-2xl border bg-white shadow-sm">
+            <div className="flex items-center justify-between px-4 py-3 sm:px-5"><div><h2 className="font-semibold text-slate-900">场馆位置</h2><p className="mt-0.5 text-xs text-slate-500">{gym.city}{gym.district ? ` · ${gym.district}` : ''}</p></div><span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">地图已定位</span></div>
+            <div className="h-56 border-t sm:h-64"><GymMap gyms={mapGyms} initialCenter={[gym.lng, gym.lat]} focus={{ lng: gym.lng, lat: gym.lat, zoom: 14 }} /></div>
+          </section>
+          <section id="environment" className="rounded-2xl border bg-white p-5 shadow-sm sm:p-6">
+            <div className="mb-4 flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-lg">✦</span><div><h2 className="font-semibold text-slate-900">训练环境</h2><p className="text-xs text-slate-500">来自场馆资料</p></div></div>
+            <p className="whitespace-pre-wrap text-sm leading-7 text-slate-600">{gym.environment || gym.description || '环境信息尚未补充，欢迎熟悉这家场馆的用户提供资料。'}</p>
+          </section>
+        </div>
+
+        <section id="price" className="mb-5 rounded-2xl border bg-white p-5 shadow-sm sm:p-6">
+          <h2 className="font-semibold text-slate-900">价格与营业信息</h2>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <div className="rounded-xl bg-slate-50 p-4"><p className="text-xs text-slate-500">价格参考</p><p className="mt-1 font-medium text-slate-900">{gym.price || '暂无公开价格'}</p></div>
+            <div className="rounded-xl bg-slate-50 p-4"><p className="text-xs text-slate-500">营业时间</p><p className="mt-1 font-medium text-slate-900">{gym.hours || '暂无营业时间'}</p></div>
+          </div>
+        </section>
 
       <section id="equipment" className="mb-6">
-        <div className="mb-2 flex items-center justify-between">
-          <h2 className="font-medium">器械清单</h2>
+        <div className="mb-3 flex items-center justify-between">
+          <div><h2 className="font-semibold text-slate-900">器械清单</h2><p className="mt-1 text-xs text-slate-500">共 {equipmentCount} 件器械，{gym.equipment.length} 个品类</p></div>
           {canManageEquipment && (
             <Button size="sm" variant="outline" onClick={() => setShowAddForm((v) => !v)}>
               {showAddForm ? '收起' : '+ 新增器械'}
@@ -218,13 +251,13 @@ export default function GymDetailPage() {
         )}
 
         {gym.equipment.length === 0 ? (
-          <p className="text-sm text-muted-foreground">暂无器械信息</p>
+          <div className="rounded-2xl border border-dashed bg-white p-8 text-center"><p className="font-medium text-slate-800">器械清单还在完善中</p><p className="mt-1 text-sm text-slate-500">如果你去过这里，可以帮助补充真实器械信息。</p></div>
         ) : (
-          <ul className="space-y-2">
+          <ul className="grid gap-2 sm:grid-cols-2">
             {gym.equipment.map((e) => {
               const st = STATUS_LABEL[e.status] ?? STATUS_LABEL.NORMAL
               return (
-                <li key={e.id} className="rounded-lg border p-3">
+                <li key={e.id} className="rounded-2xl border bg-white p-4 shadow-sm transition hover:border-indigo-200 hover:shadow-md">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-medium">{e.name}</span>
                     {e.professionalName && <span className="text-xs text-muted-foreground">（{e.professionalName}）</span>}
@@ -284,24 +317,18 @@ export default function GymDetailPage() {
         )}
       </section>
 
-      {gym.description && <p className="mb-4 whitespace-pre-wrap text-muted-foreground">{gym.description}</p>}
+      {gym.description && <section className="my-5 rounded-2xl border bg-white p-5 shadow-sm"><h2 className="mb-2 font-semibold text-slate-900">场馆介绍</h2><p className="whitespace-pre-wrap text-sm leading-7 text-slate-600">{gym.description}</p></section>}
       {gym.images.length > 0 && (
-        <div className="mb-4 flex flex-wrap gap-2">
+        <div className="mb-5 grid grid-cols-2 gap-2 sm:grid-cols-3">
           {gym.images.map((url) => (
-            <img key={url} src={url} alt="" className="h-24 w-32 rounded object-cover" />
+            <img key={url} src={url} alt={`${gym.name}场馆照片`} loading="lazy" className="aspect-[4/3] w-full rounded-xl object-cover" />
           ))}
         </div>
       )}
 
-      <div className="mb-6 flex flex-wrap items-center gap-3">
-        <Button variant={gym.myCheckIn ? 'secondary' : 'default'} onClick={() => (token ? checkInMutation.mutate() : undefined)} disabled={!token || checkInMutation.isPending}>
-          {gym.myCheckIn ? '已打卡（点击取消）' : '打卡'}
-        </Button>
-        {gym.avgRating != null && <span className="text-sm text-muted-foreground">评分 {gym.avgRating}（{gym._count.reviews} 条）· 打卡 {gym._count.checkIns}</span>}
-      </div>
-
-      <div className="mb-6 rounded-lg border p-4">
-        <h2 className="mb-2 font-medium">健身房评分</h2>
+      <div className="mb-5 rounded-2xl border bg-white p-5 shadow-sm sm:p-6">
+        <h2 className="font-semibold text-slate-900">为这家健身房评分</h2>
+        <p className="mt-1 text-sm text-slate-500">分享真实体验，帮助大家找到适合自己的训练场地。</p>
         <div className="flex flex-wrap items-center gap-2">
           <select value={rating} onChange={(e) => setRating(Number(e.target.value))} className="h-9 rounded-md border border-input bg-transparent px-2 text-sm">
             {[5, 4, 3, 2, 1].map((r) => (
@@ -313,13 +340,13 @@ export default function GymDetailPage() {
         </div>
       </div>
 
-      <h2 className="mb-2 font-medium">评价列表</h2>
+      <h2 className="mb-3 font-semibold text-slate-900">用户评价 <span className="text-sm font-normal text-slate-500">({gym.reviews.length})</span></h2>
       {gym.reviews.length === 0 ? (
         <p className="text-sm text-muted-foreground">暂无评价</p>
       ) : (
         <ul className="space-y-2">
           {gym.reviews.map((r) => (
-            <li key={r.id} className="rounded-lg border p-3 text-sm">
+            <li key={r.id} className="rounded-2xl border bg-white p-4 text-sm shadow-sm">
               <div className="flex items-center gap-2">
                 <span className="font-medium">{r.user.nickname ?? '匿名'}</span>
                 <span className="text-muted-foreground">★ {r.rating}</span>
@@ -335,6 +362,7 @@ export default function GymDetailPage() {
           {toast}
         </div>
       )}
+      </div>
     </main>
   )
 }

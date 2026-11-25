@@ -1,0 +1,24 @@
+name: 功能建议
+description: 提出能改善健身地图的功能
+title: "feat: "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: 要解决的问题
+      description: 哪类用户在什么场景下遇到了什么困难？
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 建议方案
+      description: 描述你希望用户如何使用这个功能。
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 其他考虑过的方案
+    validations:
+      required: false

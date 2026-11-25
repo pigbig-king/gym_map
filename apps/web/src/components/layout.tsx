@@ -15,8 +15,8 @@ export default function Layout() {
 
   return (
     <>
-      <nav className="sticky top-0 z-20 border-b border-border/60 bg-background/80 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-2.5">
+      <nav className="sticky top-0 z-20 border-b border-border/60 bg-background/90 backdrop-blur-md">
+        <div className="mx-auto flex max-w-[1440px] items-center justify-between px-4 py-2.5 sm:px-6">
           <div className="flex items-center gap-4">
             <Link to="/" className="flex shrink-0 items-center gap-1.5">
               <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-violet-600 to-indigo-500 text-white shadow-sm">

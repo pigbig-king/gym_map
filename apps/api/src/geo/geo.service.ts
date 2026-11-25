@@ -9,6 +9,14 @@ const DISTRICTS: GeoEntry[] = [
   { name: '庐阳区', city: '合肥', district: '庐阳区', lat: 31.87, lng: 117.27 },
   { name: '包河区', city: '合肥', district: '包河区', lat: 31.8, lng: 117.3 },
   { name: '瑶海区', city: '合肥', district: '瑶海区', lat: 31.86, lng: 117.32 },
+  { name: '肥东县', city: '合肥', district: '肥东县', lat: 31.89, lng: 117.47 },
+  { name: '肥西县', city: '合肥', district: '肥西县', lat: 31.71, lng: 117.16 },
+  { name: '长丰县', city: '合肥', district: '长丰县', lat: 32.48, lng: 117.17 },
+  { name: '庐江县', city: '合肥', district: '庐江县', lat: 31.26, lng: 117.29 },
+  { name: '巢湖市', city: '合肥', district: '巢湖市', lat: 31.62, lng: 117.87 },
+  { name: '高新区', city: '合肥', district: '高新区', lat: 31.85, lng: 117.13 },
+  { name: '经开区', city: '合肥', district: '经开区', lat: 31.78, lng: 117.2 },
+  { name: '新站区', city: '合肥', district: '新站区', lat: 31.92, lng: 117.34 },
   { name: '政务区', city: '合肥', district: '政务区', lat: 31.82, lng: 117.23 },
 ]
 
